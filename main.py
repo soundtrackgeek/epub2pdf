@@ -2,6 +2,9 @@ import os
 import pdfkit
 import fitz  # Optional - For finer control over PDF layout
 
+# Configuration for pdfkit
+config = pdfkit.configuration(wkhtmltopdf="C:\\Program Files\\wkhtmltopdf\\bin\\wkhtmltopdf.exe")  # Adjust the path!
+
 def convert_epub_to_pdf(input_file, output_file):
     """Converts an EPUB file to a PDF file.
 
@@ -11,7 +14,7 @@ def convert_epub_to_pdf(input_file, output_file):
     """
 
     # Basic conversion using pdfkit
-    pdfkit.from_file(input_file, output_file)
+    pdfkit.from_file(input_file, output_file, configuration=config)
 
     # Optional: Improve PDF layout with fitz
     if fitz:  # Check if fitz is installed
