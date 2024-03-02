@@ -1,48 +1,38 @@
 import os
-import pdfkit
-import fitz  # Optional - For finer control over PDF layout
+import ebooklib
+from ebooklib import epub
 
-# Configuration for pdfkit
-config = pdfkit.configuration(wkhtmltopdf="C:\\Program Files\\wkhtmltopdf\\bin\\wkhtmltopdf.exe")  # Adjust the path!
+def convert_epub_to_pdf(epub_file_path, output_dir):
+    """Converts an EPUB file to PDF and saves it in the output directory."""
 
-def convert_epub_to_pdf(input_file, output_file):
-    """Converts an EPUB file to a PDF file.
+    # Read the EPUB file
+    book = epub.read_epub(epub_file_path)
 
-    Args:
-        input_file (str): Path to the input EPUB file.
-        output_file (str): Path to the output PDF file.
-    """
+    # Create a PDF document
+    pdf_doc = ebooklib.create_pdf_document(book)
 
-    # Basic conversion using pdfkit
-    pdfkit.from_file(input_file, output_file, configuration=config)
+    # Get the EPUB file name without extension
+    epub_file_name = os.path.splitext(os.path.basename(epub_file_path))[0]
 
-    # Optional: Improve PDF layout with fitz
-    if fitz:  # Check if fitz is installed
-        doc = fitz.open(input_file)  # Open EPUB as a PyMuPDF document
-        for page in doc:
-            pix = page.get_pixmap()  # Render the page as an image
-            pix.save(output_file.replace('.pdf', f'-page{page.number}.png'))  # Save the image
-        doc.close()
+    # Construct the output PDF file path
+    output_pdf_path = os.path.join(output_dir, epub_file_name + ".pdf")
 
-        doc = fitz.open()  # Create a new PDF document
-        for page_image in sorted(os.listdir(os.path.dirname(output_file))):
-            if page_image.endswith('.png') and page_image.startswith(os.path.basename(output_file)[:-4]):
-                img = fitz.open(os.path.join(os.path.dirname(output_file), page_image))
-                rect = img[0].rect  # Full image dimensions
-                pdf_page = doc.new_page(width=rect.width, height=rect.height)
-                pdf_page.insert_image(rect, stream=img[0].get_image_data())
-                os.remove(os.path.join(os.path.dirname(output_file), page_image))  # Cleanup
-        doc.save(output_file)
+    # Write the PDF content to the file
+    with open(output_pdf_path, "wb") as pdf_file:
+        pdf_file.write(pdf_doc)
 
-if __name__ == '__main__':
-    epub_folder = 'c:\\epub'
+    print(f"Converted {epub_file_path} to {output_pdf_path}")
 
-    # Ensure you have these libraries installed:
-    # pip install pdfkit fitz-pymupdf
+# Specify the EPUB folder and output directory
+epub_folder = "c:\\epub"  # Replace with your actual EPUB folder path
+output_dir = "c:\\pdf"  # Replace with your desired output directory
 
-    for filename in os.listdir(epub_folder):
-        if filename.endswith('.epub'):
-            input_filepath = os.path.join(epub_folder, filename)
-            output_filename = filename.replace('.epub', '.pdf')
-            output_filepath = os.path.join(epub_folder, output_filename)
-            convert_epub_to_pdf(input_filepath, output_filepath)
+# Create the output directory if it doesn't exist
+if not os.path.exists(output_dir):
+    os.makedirs(output_dir)
+
+# Iterate through EPUB files in the folder
+for filename in os.listdir(epub_folder):
+    if filename.endswith(".epub"):
+        epub_file_path = os.path.join(epub_folder, filename)
+        convert_epub_to_pdf(epub_file_path, output_dir)
